@@ -1,0 +1,2 @@
+obj-y += nn_controller.o
+obj-y += nn_compute.o
