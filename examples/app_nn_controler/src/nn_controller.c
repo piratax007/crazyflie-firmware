@@ -46,7 +46,7 @@ static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
 
-bool print_flag = true;
+int PWM_0, PWM_1, PWM_2, PWM_3;
 
 
 // We still need an appMain() function, but we will not really use it. Just let it quietly sleep.
@@ -111,10 +111,22 @@ void controllerOutOfTree(
   state_array[11] = omega_yaw;
 
   neuralNetworkComputation(&control_n, state_array);
+
+  rpm2pwm(&control_n, &PWM_0, &PWM_2, &PWM_2, &PWM_3);
   
 
   // Call the PID controller instead in this example to make it possible to fly
   controllerPid(control, setpoint, sensors, state, tick);
+}
+
+void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PWM_3) {
+  const float a = 6.24e-10f;
+  const float b = 2.14e-5f;
+
+  *PWM_0 = 65535 * (a * (control_n->rpm_0 * (float)control_n->rpm_0) + b * (float)(control_n->rpm_0));
+  *PWM_1 = 65535 * (a * (control_n->rpm_1 * (float)control_n->rpm_1) + b * (float)(control_n->rpm_1));
+  *PWM_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
+  *PWM_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
 }
 
 // PARAM_GROUP_START(ctrlNN)
