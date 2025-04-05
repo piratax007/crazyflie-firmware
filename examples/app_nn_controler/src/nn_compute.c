@@ -1,10 +1,10 @@
 
 #include "nn_compute.h"
 
-#define gravity 9.82
+#define g 9.81
 #define mass 0.033
 #define kf 3.16e-10
-#define hoverRPM sqrtf(gravity / (4 * kf))
+#define hoverRPM sqrtf((g * mass) / (4 * kf))
 
 static const int structure[3][2] = {{64, 12},{64, 64},{4, 64}};
 static float output_0[64];

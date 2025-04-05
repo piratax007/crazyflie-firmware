@@ -34,17 +34,18 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "math3d.h"
-
-// Edit the debug name to get nice debug prints
 #define DEBUG_MODULE "NNCONTROLLER"
 #include "debug.h"
 
 #include "nn_controller.h"
 #include "log.h"
+#include "param.h"
+#include "led.h"
 
 static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
+// static float activateNN = 0.0f;
 
 int PWM_0, PWM_1, PWM_2, PWM_3;
 
@@ -58,18 +59,13 @@ void appMain() {
   }
 }
 
-// Call the PID controller in this example to make it possible to fly. When you implement you own controller, there is
-// no need to include the pid controller.
-#include "controller_pid.h"
-
 void controllerOutOfTreeInit() {
   control_n.rpm_0 = 0.0f;
   control_n.rpm_1 = 0.0f;
   control_n.rpm_2 = 0.0f;
   control_n.rpm_3 = 0.0f;
 
-  // Call the PID controller instead in this example to make it possible to fly
-  controllerPidInit();
+  counter = 0;
 }
 
 bool controllerOutOfTreeTest() {
@@ -83,7 +79,9 @@ void controllerOutOfTree(
     const state_t *state,
     const uint32_t tick
     ) {
-  // Implement your controller here...
+  
+  control->controlMode = controlModeNN;
+
   struct quat q = mkquat(
       state->attitudeQuaternion.x,
       state->attitudeQuaternion.y,
@@ -110,13 +108,23 @@ void controllerOutOfTree(
   state_array[10] = omega_pitch;
   state_array[11] = omega_yaw;
 
-  neuralNetworkComputation(&control_n, state_array);
+  // neuralNetworkComputation(&control_n, state_array);
 
-  rpm2pwm(&control_n, &PWM_0, &PWM_2, &PWM_2, &PWM_3);
-  
+  // rpm2pwm(&control_n, &PWM_0, &PWM_1, &PWM_2, &PWM_3);
 
-  // Call the PID controller instead in this example to make it possible to fly
-  controllerPid(control, setpoint, sensors, state, tick);
+  if (counter < 10000) {
+    counter++;
+
+    control->motorPwm[0] = 0;
+    control->motorPwm[1] = 0;
+    control->motorPwm[2] = 0;
+    control->motorPwm[3] = 0;
+  } else {
+    control->motorPwm[0] = 10000;
+    control->motorPwm[1] = 10000;
+    control->motorPwm[2] = 10000;
+    control->motorPwm[3] = 10000;
+  }
 }
 
 void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PWM_3) {
@@ -130,24 +138,32 @@ void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PW
 }
 
 // PARAM_GROUP_START(ctrlNN)
-
+// /**
+//  * @brief Activation signal for the NN controller
+//  */
+// PARAM_ADD(PARAM_FLOAT, activateNN, &activateNN)
 // PARAM_GROUP_STOP(ctrlNN)
 
-LOG_GROUP_START(ctrlNN)
-LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
-LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
-LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
+// LOG_GROUP_START(ctrlNN)
+// LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
+// LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
+// LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
 
-LOG_ADD(LOG_FLOAT, ob_roll, &state_array[3])
-LOG_ADD(LOG_FLOAT, ob_pitch, &state_array[4])
-LOG_ADD(LOG_FLOAT, ob_yaw, &state_array[5])
+// LOG_ADD(LOG_FLOAT, ob_roll, &state_array[3])
+// LOG_ADD(LOG_FLOAT, ob_pitch, &state_array[4])
+// LOG_ADD(LOG_FLOAT, ob_yaw, &state_array[5])
 
-LOG_ADD(LOG_FLOAT, ob_vx, &state_array[6])
-LOG_ADD(LOG_FLOAT, ob_vy, &state_array[7])
-LOG_ADD(LOG_FLOAT, ob_vz, &state_array[8])
+// LOG_ADD(LOG_FLOAT, ob_vx, &state_array[6])
+// LOG_ADD(LOG_FLOAT, ob_vy, &state_array[7])
+// LOG_ADD(LOG_FLOAT, ob_vz, &state_array[8])
 
-LOG_ADD(LOG_FLOAT, ob_wx, &state_array[0])
-LOG_ADD(LOG_FLOAT, ob_wy, &state_array[0])
-LOG_ADD(LOG_FLOAT, ob_wz, &state_array[0])
+// LOG_ADD(LOG_FLOAT, ob_wx, &state_array[9])
+// LOG_ADD(LOG_FLOAT, ob_wy, &state_array[10])
+// LOG_ADD(LOG_FLOAT, ob_wz, &state_array[11])
 
-LOG_GROUP_STOP(ctrlNN)
+// LOG_ADD(LOG_FLOAT, nn_rpm_0, &control_n.rpm_0)
+// LOG_ADD(LOG_FLOAT, nn_rpm_1, &control_n.rpm_1)
+// LOG_ADD(LOG_FLOAT, nn_rpm_2, &control_n.rpm_2)
+// LOG_ADD(LOG_FLOAT, nn_rpm_3, &control_n.rpm_3)
+
+// LOG_GROUP_STOP(ctrlNN)
