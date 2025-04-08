@@ -45,7 +45,7 @@
 static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
-// static float activateNN = 0.0f;
+static float activateNN = 0.0f;
 
 int PWM_0, PWM_1, PWM_2, PWM_3;
 
@@ -81,6 +81,9 @@ void controllerOutOfTree(
     ) {
   
   control->controlMode = controlModeNN;
+  if (!RATE_DO_EXECUTE(RATE_500_HZ, tick)) {
+    return;
+  }
 
   struct quat q = mkquat(
       state->attitudeQuaternion.x,
@@ -108,9 +111,9 @@ void controllerOutOfTree(
   state_array[10] = omega_pitch;
   state_array[11] = omega_yaw;
 
-  // neuralNetworkComputation(&control_n, state_array);
+  neuralNetworkComputation(&control_n, state_array);
 
-  // rpm2pwm(&control_n, &PWM_0, &PWM_1, &PWM_2, &PWM_3);
+  rpm2pwm(&control_n, &PWM_0, &PWM_1, &PWM_2, &PWM_3);
 
   if (counter < 10000) {
     counter++;
@@ -120,10 +123,10 @@ void controllerOutOfTree(
     control->motorPwm[2] = 0;
     control->motorPwm[3] = 0;
   } else {
-    control->motorPwm[0] = 10000;
-    control->motorPwm[1] = 10000;
-    control->motorPwm[2] = 10000;
-    control->motorPwm[3] = 10000;
+    control->motorPwm[0] = PWM_0;
+    control->motorPwm[1] = PWM_1;
+    control->motorPwm[2] = PWM_2;
+    control->motorPwm[3] = PWM_3;
   }
 }
 
@@ -137,12 +140,12 @@ void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PW
   *PWM_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
 }
 
-// PARAM_GROUP_START(ctrlNN)
-// /**
-//  * @brief Activation signal for the NN controller
-//  */
-// PARAM_ADD(PARAM_FLOAT, activateNN, &activateNN)
-// PARAM_GROUP_STOP(ctrlNN)
+PARAM_GROUP_START(ctrlNN)
+/**
+ * @brief Activation signal for the NN controller
+ */
+PARAM_ADD(PARAM_FLOAT, activateNN, &activateNN)
+PARAM_GROUP_STOP(ctrlNN)
 
 // LOG_GROUP_START(ctrlNN)
 // LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
