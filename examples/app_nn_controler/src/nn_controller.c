@@ -18,7 +18,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received A copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  *
@@ -131,13 +131,22 @@ void controllerOutOfTree(
 }
 
 void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PWM_3) {
-  const float a = 6.24e-10f;
-  const float b = 2.14e-5f;
+  // const float a = 6.24e-10f;
+  // const float b = 2.14e-5f;
 
-  *PWM_0 = 65535 * (a * (control_n->rpm_0 * (float)control_n->rpm_0) + b * (float)(control_n->rpm_0));
-  *PWM_1 = 65535 * (a * (control_n->rpm_1 * (float)control_n->rpm_1) + b * (float)(control_n->rpm_1));
-  *PWM_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
-  *PWM_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
+  // *PWM_0 = 65535 * (a * (control_n->rpm_0 * (float)control_n->rpm_0) + b * (float)(control_n->rpm_0));
+  // *PWM_1 = 65535 * (a * (control_n->rpm_1 * (float)control_n->rpm_1) + b * (float)(control_n->rpm_1));
+  // *PWM_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
+  // *PWM_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
+
+  const float a = 1.11984693e-07f;
+  const float b = 1.42493452e-03f;
+  const float c = -1.92966300e+00f;
+
+  *PWM_0 = 65536 * (a * (control_n->rpm_0 * control_n->rpm_0) + b * control_n->rpm_0 + c) / 100;
+  *PWM_1 = 65536 * (a * (control_n->rpm_1 * control_n->rpm_1) + b * control_n->rpm_1 + c) / 100;
+  *PWM_2 = 65536 * (a * (control_n->rpm_2 * control_n->rpm_2) + b * control_n->rpm_2 + c) / 100;
+  *PWM_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
 }
 
 PARAM_GROUP_START(ctrlNN)
