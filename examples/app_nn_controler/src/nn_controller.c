@@ -45,7 +45,6 @@
 static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
-static float activateNN = 0.0f;
 
 int PWM_0, PWM_1, PWM_2, PWM_3;
 
@@ -149,17 +148,10 @@ void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PW
   *PWM_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
 }
 
-PARAM_GROUP_START(ctrlNN)
-/**
- * @brief Activation signal for the NN controller
- */
-PARAM_ADD(PARAM_FLOAT, activateNN, &activateNN)
-PARAM_GROUP_STOP(ctrlNN)
-
-// LOG_GROUP_START(ctrlNN)
-// LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
-// LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
-// LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
+LOG_GROUP_START(ctrlNN)
+LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
+LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
+LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
 
 // LOG_ADD(LOG_FLOAT, ob_roll, &state_array[3])
 // LOG_ADD(LOG_FLOAT, ob_pitch, &state_array[4])
@@ -173,9 +165,14 @@ PARAM_GROUP_STOP(ctrlNN)
 // LOG_ADD(LOG_FLOAT, ob_wy, &state_array[10])
 // LOG_ADD(LOG_FLOAT, ob_wz, &state_array[11])
 
-// LOG_ADD(LOG_FLOAT, nn_rpm_0, &control_n.rpm_0)
-// LOG_ADD(LOG_FLOAT, nn_rpm_1, &control_n.rpm_1)
-// LOG_ADD(LOG_FLOAT, nn_rpm_2, &control_n.rpm_2)
-// LOG_ADD(LOG_FLOAT, nn_rpm_3, &control_n.rpm_3)
+LOG_ADD(LOG_FLOAT, nn_rpm_0, &control_n.rpm_0)
+LOG_ADD(LOG_FLOAT, nn_rpm_1, &control_n.rpm_1)
+LOG_ADD(LOG_FLOAT, nn_rpm_2, &control_n.rpm_2)
+LOG_ADD(LOG_FLOAT, nn_rpm_3, &control_n.rpm_3)
 
-// LOG_GROUP_STOP(ctrlNN)
+LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_0)
+LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_1)
+LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_2)
+LOG_ADD(LOG_INT32, motor_pwm_3, &PWM_3)
+
+LOG_GROUP_STOP(ctrlNN)
