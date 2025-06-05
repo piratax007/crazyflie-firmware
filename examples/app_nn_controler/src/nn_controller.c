@@ -93,16 +93,16 @@ void controllerOutOfTree(
 
   euler_angles = quat2rpy(q);
 
-  float omega_roll = radians(sensors->gyro.x);
-  float omega_pitch = radians(sensors->gyro.y);
-  float omega_yaw = radians(sensors->gyro.z);
+  float omega_roll = sensors->gyro.x;
+  float omega_pitch = sensors->gyro.y;
+  float omega_yaw = sensors->gyro.z;
 
   state_array[0] = state->position.x;
   state_array[1] = state->position.y;
   state_array[2] = state->position.z;
-  state_array[3] = euler_angles.x;
-  state_array[4] = euler_angles.y;
-  state_array[5] = euler_angles.z;
+  state_array[3] = radians(euler_angles.x);
+  state_array[4] = radians(euler_angles.y);
+  state_array[5] = radians(euler_angles.z);
   state_array[6] = state->velocity.x;
   state_array[7] = state->velocity.y;
   state_array[8] = state->velocity.z;
@@ -138,14 +138,22 @@ void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PW
   // *PWM_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
   // *PWM_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
 
-  const float a = 1.11984693e-07f;
-  const float b = 1.42493452e-03f;
-  const float c = -1.92966300e+00f;
+  // const float a = 1.11984693e-07f;
+  // const float b = 1.42493452e-03f;
+  // const float c = -1.92966300e+00f;
 
-  *PWM_0 = 65536 * (a * (control_n->rpm_0 * control_n->rpm_0) + b * control_n->rpm_0 + c) / 100;
-  *PWM_1 = 65536 * (a * (control_n->rpm_1 * control_n->rpm_1) + b * control_n->rpm_1 + c) / 100;
-  *PWM_2 = 65536 * (a * (control_n->rpm_2 * control_n->rpm_2) + b * control_n->rpm_2 + c) / 100;
-  *PWM_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
+  // *PWM_0 = 65536 * (a * (control_n->rpm_0 * control_n->rpm_0) + b * control_n->rpm_0 + c) / 100;
+  // *PWM_1 = 65536 * (a * (control_n->rpm_1 * control_n->rpm_1) + b * control_n->rpm_1 + c) / 100;
+  // *PWM_2 = 65536 * (a * (control_n->rpm_2 * control_n->rpm_2) + b * control_n->rpm_2 + c) / 100;
+  // *PWM_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
+
+  // const float a = 4070.3f;
+  const float b = 0.2685f;
+
+  *PWM_0 = (control_n->rpm_0 - 4070.3f) / b;
+  *PWM_1 = (control_n->rpm_1 - 4070.3f) / b;
+  *PWM_2 = (control_n->rpm_2 - 4070.3f) / b;
+  *PWM_3 = (control_n->rpm_3 - 4070.3f) / b;
 }
 
 LOG_GROUP_START(ctrlNN)
