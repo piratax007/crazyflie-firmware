@@ -141,11 +141,6 @@ static void powerDistributionNN(const control_t *control, motors_thrust_uncapped
   motorThrustUncapped->motors.m2 = control->motorPwm[1];
   motorThrustUncapped->motors.m3 = control->motorPwm[2];
   motorThrustUncapped->motors.m4 = control->motorPwm[3];
-
-  // motorThrustUncapped->motors.m2 = 0;
-  // motorThrustUncapped->motors.m2 = 0;
-  // motorThrustUncapped->motors.m3 = 0;
-  // motorThrustUncapped->motors.m4 = 0;
 }
 
 void powerDistribution(const control_t *control, motors_thrust_uncapped_t* motorThrustUncapped)
