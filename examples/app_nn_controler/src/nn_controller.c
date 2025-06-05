@@ -109,16 +109,16 @@ void controllerOutOfTree(
   state_array[10] = omega_pitch;
   state_array[11] = omega_yaw;
 
-  neuralNetworkComputation(&control_n, state_array);
-
-  rpm2pwm(&control_n, &PWM_NN_0, &PWM_NN_1, &PWM_NN_2, &PWM_NN_3);
-
   if (activateNN == 0) {
     control->motorPwm[0] = 0;
     control->motorPwm[1] = 0;
     control->motorPwm[2] = 0;
     control->motorPwm[3] = 0;
   } else {
+    neuralNetworkComputation(&control_n, state_array);
+
+    rpm2pwm(&control_n, &PWM_NN_0, &PWM_NN_1, &PWM_NN_2, &PWM_NN_3);
+
     control->motorPwm[0] = PWM_NN_0;
     control->motorPwm[1] = PWM_NN_1;
     control->motorPwm[2] = PWM_NN_2;
