@@ -45,6 +45,7 @@
 static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
+static int activateNN = 0;
 
 int PWM_NN_0, PWM_NN_1, PWM_NN_2, PWM_NN_3;
 
@@ -63,8 +64,6 @@ void controllerOutOfTreeInit() {
   control_n.rpm_1 = 0.0f;
   control_n.rpm_2 = 0.0f;
   control_n.rpm_3 = 0.0f;
-
-  counter = 0;
 }
 
 bool controllerOutOfTreeTest() {
@@ -114,9 +113,7 @@ void controllerOutOfTree(
 
   rpm2pwm(&control_n, &PWM_NN_0, &PWM_NN_1, &PWM_NN_2, &PWM_NN_3);
 
-  if (counter < 10000) {
-    counter++;
-
+  if (activateNN == 0) {
     control->motorPwm[0] = 0;
     control->motorPwm[1] = 0;
     control->motorPwm[2] = 0;
@@ -155,6 +152,10 @@ void rpm2pwm(control_t_n *control_n, int *PWM_NN_0, int *PWM_NN_1, int *PWM_NN_2
   *PWM_NN_2 = (control_n->rpm_2 - 4070.3f) / b;
   *PWM_NN_3 = (control_n->rpm_3 - 4070.3f) / b;
 }
+
+PARAM_GROUP_START(nn_controller)
+PARAM_ADD(PARAM_INT8, activateNN, &activateNN)
+PARAM_GROUP_STOP(nn_controller)
 
 LOG_GROUP_START(ctrlNN)
 LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
