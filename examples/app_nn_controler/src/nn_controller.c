@@ -46,7 +46,7 @@ static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
 
-int PWM_0, PWM_1, PWM_2, PWM_3;
+int PWM_NN_0, PWM_NN_1, PWM_NN_2, PWM_NN_3;
 
 
 // We still need an appMain() function, but we will not really use it. Just let it quietly sleep.
@@ -112,7 +112,7 @@ void controllerOutOfTree(
 
   neuralNetworkComputation(&control_n, state_array);
 
-  rpm2pwm(&control_n, &PWM_0, &PWM_1, &PWM_2, &PWM_3);
+  rpm2pwm(&control_n, &PWM_NN_0, &PWM_NN_1, &PWM_NN_2, &PWM_NN_3);
 
   if (counter < 10000) {
     counter++;
@@ -122,38 +122,38 @@ void controllerOutOfTree(
     control->motorPwm[2] = 0;
     control->motorPwm[3] = 0;
   } else {
-    control->motorPwm[0] = PWM_0;
-    control->motorPwm[1] = PWM_1;
-    control->motorPwm[2] = PWM_2;
-    control->motorPwm[3] = PWM_3;
+    control->motorPwm[0] = PWM_NN_0;
+    control->motorPwm[1] = PWM_NN_1;
+    control->motorPwm[2] = PWM_NN_2;
+    control->motorPwm[3] = PWM_NN_3;
   }
 }
 
-void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PWM_3) {
+void rpm2pwm(control_t_n *control_n, int *PWM_NN_0, int *PWM_NN_1, int *PWM_NN_2, int *PWM_NN_3) {
   // const float a = 6.24e-10f;
   // const float b = 2.14e-5f;
 
-  // *PWM_0 = 65535 * (a * (control_n->rpm_0 * (float)control_n->rpm_0) + b * (float)(control_n->rpm_0));
-  // *PWM_1 = 65535 * (a * (control_n->rpm_1 * (float)control_n->rpm_1) + b * (float)(control_n->rpm_1));
-  // *PWM_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
-  // *PWM_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
+  // *PWM_NN_0 = 65535 * (a * (control_n->rpm_0 * (float)control_n->rpm_0) + b * (float)(control_n->rpm_0));
+  // *PWM_NN_1 = 65535 * (a * (control_n->rpm_1 * (float)control_n->rpm_1) + b * (float)(control_n->rpm_1));
+  // *PWM_NN_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
+  // *PWM_NN_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
 
   // const float a = 1.11984693e-07f;
   // const float b = 1.42493452e-03f;
   // const float c = -1.92966300e+00f;
 
-  // *PWM_0 = 65536 * (a * (control_n->rpm_0 * control_n->rpm_0) + b * control_n->rpm_0 + c) / 100;
-  // *PWM_1 = 65536 * (a * (control_n->rpm_1 * control_n->rpm_1) + b * control_n->rpm_1 + c) / 100;
-  // *PWM_2 = 65536 * (a * (control_n->rpm_2 * control_n->rpm_2) + b * control_n->rpm_2 + c) / 100;
-  // *PWM_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
+  // *PWM_NN_0 = 65536 * (a * (control_n->rpm_0 * control_n->rpm_0) + b * control_n->rpm_0 + c) / 100;
+  // *PWM_NN_1 = 65536 * (a * (control_n->rpm_1 * control_n->rpm_1) + b * control_n->rpm_1 + c) / 100;
+  // *PWM_NN_2 = 65536 * (a * (control_n->rpm_2 * control_n->rpm_2) + b * control_n->rpm_2 + c) / 100;
+  // *PWM_NN_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
 
   // const float a = 4070.3f;
   const float b = 0.2685f;
 
-  *PWM_0 = (control_n->rpm_0 - 4070.3f) / b;
-  *PWM_1 = (control_n->rpm_1 - 4070.3f) / b;
-  *PWM_2 = (control_n->rpm_2 - 4070.3f) / b;
-  *PWM_3 = (control_n->rpm_3 - 4070.3f) / b;
+  *PWM_NN_0 = (control_n->rpm_0 - 4070.3f) / b;
+  *PWM_NN_1 = (control_n->rpm_1 - 4070.3f) / b;
+  *PWM_NN_2 = (control_n->rpm_2 - 4070.3f) / b;
+  *PWM_NN_3 = (control_n->rpm_3 - 4070.3f) / b;
 }
 
 LOG_GROUP_START(ctrlNN)
@@ -178,9 +178,9 @@ LOG_ADD(LOG_FLOAT, ob_yaw, &state_array[5])
 // LOG_ADD(LOG_FLOAT, nn_rpm_2, &control_n.rpm_2)
 // LOG_ADD(LOG_FLOAT, nn_rpm_3, &control_n.rpm_3)
 
-LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_0)
-LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_1)
-LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_2)
-LOG_ADD(LOG_INT32, motor_pwm_3, &PWM_3)
+LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_NN_0)
+LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_NN_1)
+LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_NN_2)
+LOG_ADD(LOG_INT32, motor_pwm_3, &PWM_NN_3)
 
 LOG_GROUP_STOP(ctrlNN)
