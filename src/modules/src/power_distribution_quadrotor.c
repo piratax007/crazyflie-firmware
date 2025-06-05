@@ -89,7 +89,9 @@ static uint16_t capMinThrust(float thrust, uint32_t minThrust) {
   return thrust;
 }
 
-static void powerDistributionLegacy(const control_t *control, motors_thrust_uncapped_t* motorThrustUncapped)
+int PWM_0, PWM_1, PWM_2, PWM_3;
+
+static void powerDistributionLegacy(const control_t *control, motors_thrust_uncapped_t* motorThrustUncapped, int *PWM_0, int *PWM_1, int *PWM_2, int *PWM_3)
 {
   int16_t r = control->roll / 2.0f;
   int16_t p = control->pitch / 2.0f;
@@ -98,6 +100,11 @@ static void powerDistributionLegacy(const control_t *control, motors_thrust_unca
   motorThrustUncapped->motors.m2 = control->thrust - r - p - control->yaw;
   motorThrustUncapped->motors.m3 = control->thrust + r - p + control->yaw;
   motorThrustUncapped->motors.m4 = control->thrust + r + p - control->yaw;
+
+  *PWM_0 = control->thrust - r + p + control->yaw;
+  *PWM_1 = control->thrust - r - p - control->yaw;
+  *PWM_2 = control->thrust + r - p + control->yaw;
+  *PWM_3 = control->thrust + r + p - control->yaw;
 }
 
 static void powerDistributionForceTorque(const control_t *control, motors_thrust_uncapped_t* motorThrustUncapped) {
@@ -140,7 +147,7 @@ void powerDistribution(const control_t *control, motors_thrust_uncapped_t* motor
 {
   switch (control->controlMode) {
     case controlModeLegacy:
-      powerDistributionLegacy(control, motorThrustUncapped);
+      powerDistributionLegacy(control, motorThrustUncapped, &PWM_0, &PWM_1, &PWM_2, &PWM_3);
       break;
     case controlModeForceTorque:
       powerDistributionForceTorque(control, motorThrustUncapped);
@@ -234,3 +241,10 @@ PARAM_ADD(PARAM_FLOAT, pwmToThrustB, &pwmToThrustB)
  */
 PARAM_ADD(PARAM_FLOAT, armLength, &armLength)
 PARAM_GROUP_STOP(quadSysId)
+
+LOG_GROUP_START(powerDistLog)
+LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_0)
+LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_1)
+LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_2)
+LOG_ADD(LOG_INT32, motor_pwm_3, &PWM_3)
+LOG_GROUP_STOP(powerDistLog)
