@@ -105,9 +105,9 @@ void controllerOutOfTree(
   state_array[6] = state->velocity.x;
   state_array[7] = state->velocity.y;
   state_array[8] = state->velocity.z;
-  state_array[9] = omega_roll;
-  state_array[10] = omega_pitch;
-  state_array[11] = omega_yaw;
+  state_array[9] = radians(omega_roll);
+  state_array[10] = radians(omega_pitch);
+  state_array[11] = radians(omega_yaw);
 
   if (activateNN == 0) {
     control->motorPwm[0] = 0;
