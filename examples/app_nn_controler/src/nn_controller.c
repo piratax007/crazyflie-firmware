@@ -79,7 +79,7 @@ void controllerOutOfTree(
     ) {
   
   control->controlMode = controlModeNN;
-  if (!RATE_DO_EXECUTE(RATE_500_HZ, tick)) {
+  if (!RATE_DO_EXECUTE(RATE_200_HZ, tick)) {
     return;
   }
 
