@@ -97,7 +97,7 @@ void controllerOutOfTree(
   float omega_yaw = sensors->gyro.z;
 
   state_array[0] = state->position.x;
-  state_array[1] = state->position.y;
+  state_array[1] = state->position.y - 3.705f;
   state_array[2] = state->position.z;
   state_array[3] = radians(euler_angles.x);
   state_array[4] = radians(euler_angles.y);
