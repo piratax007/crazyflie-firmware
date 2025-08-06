@@ -40,12 +40,14 @@
 #include "nn_controller.h"
 #include "log.h"
 #include "param.h"
+#include "usec_time.h"
 #include "led.h"
 
 static control_t_n control_n;
 struct vec euler_angles;
 static float state_array[12];
 static int activateNN = 0;
+static uint32_t activationTime;
 
 int PWM_NN_0, PWM_NN_1, PWM_NN_2, PWM_NN_3;
 
@@ -115,7 +117,9 @@ void controllerOutOfTree(
     control->motorPwm[2] = 0;
     control->motorPwm[3] = 0;
   } else {
+    uint64_t startTime = usecTimestamp();
     neuralNetworkComputation(&control_n, state_array);
+    activationTime = (uint32_t)(usecTimestamp() - startTime);
 
     rpm2pwm(&control_n, &PWM_NN_0, &PWM_NN_1, &PWM_NN_2, &PWM_NN_3);
 
@@ -158,6 +162,8 @@ PARAM_ADD(PARAM_INT8, activateNN, &activateNN)
 PARAM_GROUP_STOP(nn_controller)
 
 LOG_GROUP_START(ctrlNN)
+LOG_ADD(LOG_UINT32, activationTime, &activationTime)
+
 LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
 LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
 LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
