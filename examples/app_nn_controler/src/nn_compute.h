@@ -2,8 +2,8 @@
 // Created by fausto on 2024-12-10.
 //
 
-#ifndef NN_COMPUTE_H
-#define NN_COMPUTE_H
+#ifndef __NN_COMPUTE_H__
+#define __NN_COMPUTE_H__
 
 #include <math.h>
 

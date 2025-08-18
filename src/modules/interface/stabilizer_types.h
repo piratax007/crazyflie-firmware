@@ -366,9 +366,9 @@ typedef struct
 #define RATE_500_HZ 500
 #define RATE_250_HZ 250
 #define RATE_200_HZ 200
-#define RATE_100_HZ 100
 #define RATE_150_HZ 150
-#define RATE_40_HZ 40
+#define RATE_100_HZ 100
+#define RATE_55_HZ 55
 #define RATE_50_HZ 50
 #define RATE_25_HZ 25
 
