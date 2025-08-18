@@ -2,8 +2,8 @@
 // Created by fausto on 2024-12-10.
 //
 
-#ifndef NN_CONTROLLER_H
-#define NN_CONTROLLER_H
+#ifndef __NN_CONTROLLER_H__
+#define __NN_CONTROLLER_H__
 
 #include "stabilizer_types.h"
 #include "nn_compute.h"
