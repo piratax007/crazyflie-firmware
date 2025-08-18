@@ -164,27 +164,6 @@ PARAM_GROUP_STOP(nn_controller)
 LOG_GROUP_START(ctrlNN)
 LOG_ADD(LOG_UINT32, activationTime, &activationTime)
 
-LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
-LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
-LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
-
-LOG_ADD(LOG_FLOAT, ob_roll, &state_array[3])
-LOG_ADD(LOG_FLOAT, ob_pitch, &state_array[4])
-LOG_ADD(LOG_FLOAT, ob_yaw, &state_array[5])
-
-// LOG_ADD(LOG_FLOAT, ob_vx, &state_array[6])
-// LOG_ADD(LOG_FLOAT, ob_vy, &state_array[7])
-// LOG_ADD(LOG_FLOAT, ob_vz, &state_array[8])
-
-// LOG_ADD(LOG_FLOAT, ob_wx, &state_array[9])
-// LOG_ADD(LOG_FLOAT, ob_wy, &state_array[10])
-// LOG_ADD(LOG_FLOAT, ob_wz, &state_array[11])
-
-// LOG_ADD(LOG_FLOAT, nn_rpm_0, &control_n.rpm_0)
-// LOG_ADD(LOG_FLOAT, nn_rpm_1, &control_n.rpm_1)
-// LOG_ADD(LOG_FLOAT, nn_rpm_2, &control_n.rpm_2)
-// LOG_ADD(LOG_FLOAT, nn_rpm_3, &control_n.rpm_3)
-
 LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_NN_0)
 LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_NN_1)
 LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_NN_2)
