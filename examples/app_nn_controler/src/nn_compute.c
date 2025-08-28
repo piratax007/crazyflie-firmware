@@ -1,9 +1,9 @@
 
 #include "nn_compute.h"
 
-#define g 9.82
-#define mass 0.033
-#define kf 3.16e-10
+#define g 9.82f
+#define mass 0.033f
+#define kf 3.16e-10f
 #define hoverRPM sqrtf((g * mass) / (4 * kf))
 
 static const int structure[3][2] = {{64, 12},{64, 64},{4, 64}};
@@ -32,7 +32,7 @@ void neuralNetworkComputation(struct control_t_n *control_n, const float *state_
         for (int j = 0; j < structure[1][1]; j++) {
             output_1[i] += output_0[j] * mlp_extractor_policy_net_2_weight[i][j];
         }
-        output_1[i] += mlp_extractor_policy_net_2_bias[1];
+        output_1[i] += mlp_extractor_policy_net_2_bias[i];
         output_1[i] = tanhf(output_1[i]);
     }
     
