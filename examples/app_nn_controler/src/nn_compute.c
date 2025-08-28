@@ -1,7 +1,7 @@
 
 #include "nn_compute.h"
 
-#define g 9.82f
+#define g 9.8f
 #define mass 0.033f
 #define kf 3.16e-10f
 #define hoverRPM sqrtf((g * mass) / (4 * kf))
