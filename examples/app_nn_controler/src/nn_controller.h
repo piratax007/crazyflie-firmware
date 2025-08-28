@@ -11,4 +11,6 @@
 
 void rpm2pwm(control_t_n *control_n, int *PWM_0, int *PWM_1, int *PWM_2, int *PWM_3);
 
+struct vec quat2rpy_xyz(struct quat q_xyzw);
+
 #endif //__NN_CONTROLLER_H__

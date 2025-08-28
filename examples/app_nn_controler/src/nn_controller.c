@@ -92,7 +92,7 @@ void controllerOutOfTree(
       state->attitudeQuaternion.w
   );
 
-  euler_angles = quat2rpy(q);
+  euler_angles = quat2rpy_xyz(q);
 
   float omega_roll = sensors->gyro.x;
   float omega_pitch = sensors->gyro.y;
@@ -101,15 +101,15 @@ void controllerOutOfTree(
   state_array[0] = state->position.x;
   state_array[1] = state->position.y - 3.705f;
   state_array[2] = state->position.z;
-  state_array[3] = radians(euler_angles.x);
-  state_array[4] = radians(euler_angles.y);
-  state_array[5] = radians(euler_angles.z);
+  state_array[3] = euler_angles.x;
+  state_array[4] = euler_angles.y;
+  state_array[5] = euler_angles.z;
   state_array[6] = state->velocity.x;
   state_array[7] = state->velocity.y;
   state_array[8] = state->velocity.z;
-  state_array[9] = radians(omega_roll);
-  state_array[10] = radians(omega_pitch);
-  state_array[11] = radians(omega_yaw);
+  state_array[9] = omega_roll;
+  state_array[10] = omega_pitch;
+  state_array[11] = omega_yaw;
 
   if (activateNN == 0) {
     control->motorPwm[0] = 0;
@@ -138,6 +138,43 @@ void rpm2pwm(control_t_n *control_n, int *PWM_NN_0, int *PWM_NN_1, int *PWM_NN_2
   *PWM_NN_1 = (control_n->rpm_1 - a) / b;
   *PWM_NN_2 = (control_n->rpm_2 - a) / b;
   *PWM_NN_3 = (control_n->rpm_3 - a) / b;
+}
+
+static inline float clampf_pm1(float v) {
+  return (v > 1.0f) ? 1.0f : (v < -1.0f) ? -1.0f : v;
+}
+
+struct vec quat2rpy_xyz(struct quat q_xyzw) {
+  float x = q_xyzw.x;
+  float y = q_xyzw.y;
+  float z = q_xyzw.z;
+  float w = q_xyzw.w;
+
+  float s = w*w + x*x + y*y + z*z;
+  if (s > 0.0f) {
+    if (fabsf(1.0f - s) > 1e-6f) {
+      float inv = 1.0f / sqrtf(s);
+      w *= inv;
+      x *= inv;
+      y *= inv;
+      z *= inv;
+    }
+  }
+
+  struct vec e;
+
+  float sinr_cosp = 2.0f * (w*x + y*z);
+  float cosr_cosp = 1.0f - 2.0f * (x*x + y*y);
+  e.x = atan2f(sinr_cosp, cosr_cosp);
+
+  float sinp = 2.0f * (w*y - z*x);
+  e.y = asinf(clampf_pm1(sinp));
+
+  float siny_cosp = 2.0f * (w*z + x*y);
+  float cosy_cosp = 1.0f - 2.0f * (y*y + z*z);
+  e.z = atan2f(siny_cosp, cosy_cosp);
+
+  return e;
 }
 
 PARAM_GROUP_START(nn_controller)
