@@ -81,7 +81,7 @@ void controllerOutOfTree(
     ) {
   
   control->controlMode = controlModeNN;
-  if (!RATE_DO_EXECUTE(RATE_150_HZ, tick)) {
+  if (!RATE_DO_EXECUTE(RATE_500_HZ, tick)) {
     return;
   }
 
@@ -131,30 +131,13 @@ void controllerOutOfTree(
 }
 
 void rpm2pwm(control_t_n *control_n, int *PWM_NN_0, int *PWM_NN_1, int *PWM_NN_2, int *PWM_NN_3) {
-  // const float a = 6.24e-10f;
-  // const float b = 2.14e-5f;
-
-  // *PWM_NN_0 = 65535 * (a * (control_n->rpm_0 * (float)control_n->rpm_0) + b * (float)(control_n->rpm_0));
-  // *PWM_NN_1 = 65535 * (a * (control_n->rpm_1 * (float)control_n->rpm_1) + b * (float)(control_n->rpm_1));
-  // *PWM_NN_2 = 65535 * (a * (control_n->rpm_2 * (float)control_n->rpm_2) + b * (float)(control_n->rpm_2));
-  // *PWM_NN_3 = 65535 * (a * (control_n->rpm_3 * (float)control_n->rpm_3) + b * (float)(control_n->rpm_3));
-
-  // const float a = 1.11984693e-07f;
-  // const float b = 1.42493452e-03f;
-  // const float c = -1.92966300e+00f;
-
-  // *PWM_NN_0 = 65536 * (a * (control_n->rpm_0 * control_n->rpm_0) + b * control_n->rpm_0 + c) / 100;
-  // *PWM_NN_1 = 65536 * (a * (control_n->rpm_1 * control_n->rpm_1) + b * control_n->rpm_1 + c) / 100;
-  // *PWM_NN_2 = 65536 * (a * (control_n->rpm_2 * control_n->rpm_2) + b * control_n->rpm_2 + c) / 100;
-  // *PWM_NN_3 = 65536 * (a * (control_n->rpm_3 * control_n->rpm_3) + b * control_n->rpm_3 + c) / 100;
-
-  // const float a = 4070.3f;
+  const float a = 4070.3f;
   const float b = 0.2685f;
 
-  *PWM_NN_0 = (control_n->rpm_0 - 4070.3f) / b;
-  *PWM_NN_1 = (control_n->rpm_1 - 4070.3f) / b;
-  *PWM_NN_2 = (control_n->rpm_2 - 4070.3f) / b;
-  *PWM_NN_3 = (control_n->rpm_3 - 4070.3f) / b;
+  *PWM_NN_0 = (control_n->rpm_0 - a) / b;
+  *PWM_NN_1 = (control_n->rpm_1 - a) / b;
+  *PWM_NN_2 = (control_n->rpm_2 - a) / b;
+  *PWM_NN_3 = (control_n->rpm_3 - a) / b;
 }
 
 PARAM_GROUP_START(nn_controller)
@@ -164,9 +147,13 @@ PARAM_GROUP_STOP(nn_controller)
 LOG_GROUP_START(ctrlNN)
 LOG_ADD(LOG_UINT32, activationTime, &activationTime)
 
-LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_NN_0)
-LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_NN_1)
-LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_NN_2)
-LOG_ADD(LOG_INT32, motor_pwm_3, &PWM_NN_3)
+LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
+LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
+LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
+
+LOG_ADD(LOG_INT32, motor_pwm_0, &control_n.rpm_0)
+LOG_ADD(LOG_INT32, motor_pwm_1, &control_n.rpm_1)
+LOG_ADD(LOG_INT32, motor_pwm_2, &control_n.rpm_2)
+LOG_ADD(LOG_INT32, motor_pwm_3, &control_n.rpm_3)
 
 LOG_GROUP_STOP(ctrlNN)
