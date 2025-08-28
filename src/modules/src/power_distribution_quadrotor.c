@@ -89,9 +89,9 @@ static uint16_t capMinThrust(float thrust, uint32_t minThrust) {
   return thrust;
 }
 
-int PWM_PID_0, PWM_PID_1, PWM_PID_2, PWM_PID_3;
+int32_t PWM_PID_0, PWM_PID_1, PWM_PID_2, PWM_PID_3;
 
-static void powerDistributionLegacy(const control_t *control, motors_thrust_uncapped_t* motorThrustUncapped, int *PWM_PID_0, int *PWM_PID_1, int *PWM_PID_2, int *PWM_PID_3)
+static void powerDistributionLegacy(const control_t *control, motors_thrust_uncapped_t* motorThrustUncapped, int32_t *PWM_PID_0, int32_t *PWM_PID_1, int32_t *PWM_PID_2, int32_t *PWM_PID_3)
 {
   int16_t r = control->roll / 2.0f;
   int16_t p = control->pitch / 2.0f;
