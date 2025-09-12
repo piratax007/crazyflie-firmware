@@ -94,22 +94,18 @@ void controllerOutOfTree(
 
   euler_angles = quat2rpy_xyz(q);
 
-  float omega_roll = sensors->gyro.x;
-  float omega_pitch = sensors->gyro.y;
-  float omega_yaw = sensors->gyro.z;
-
   state_array[0] = state->position.x;
-  state_array[1] = state->position.y - 3.705f;
-  state_array[2] = state->position.z;
+  state_array[1] = state->position.y - 3.74f;
+  state_array[2] = state->position.z - 0.11f;
   state_array[3] = euler_angles.x;
   state_array[4] = euler_angles.y;
   state_array[5] = euler_angles.z;
   state_array[6] = state->velocity.x;
   state_array[7] = state->velocity.y;
   state_array[8] = state->velocity.z;
-  state_array[9] = omega_roll;
-  state_array[10] = omega_pitch;
-  state_array[11] = omega_yaw;
+  state_array[9] = radians(sensors->gyro.x);
+  state_array[10] = radians(sensors->gyro.y);
+  state_array[11] = radians(sensors->gyro.z);
 
   if (activateNN == 0) {
     control->motorPwm[0] = 0;
@@ -187,10 +183,13 @@ LOG_ADD(LOG_UINT32, activationTime, &activationTime)
 LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
 LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
 LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
+LOG_ADD(LOG_FLOAT, ob_roll, &state_array[3])
+LOG_ADD(LOG_FLOAT, ob_pitch, &state_array[4])
+LOG_ADD(LOG_FLOAT, ob_yaw, &state_array[5])
 
-LOG_ADD(LOG_INT32, motor_pwm_0, &control_n.rpm_0)
-LOG_ADD(LOG_INT32, motor_pwm_1, &control_n.rpm_1)
-LOG_ADD(LOG_INT32, motor_pwm_2, &control_n.rpm_2)
-LOG_ADD(LOG_INT32, motor_pwm_3, &control_n.rpm_3)
+LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_NN_0)
+LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_NN_1)
+LOG_ADD(LOG_INT32, motor_pwm_2, &PWM_NN_2)
+LOG_ADD(LOG_INT32, motor_pwm_3, &PWM_NN_3)
 
 LOG_GROUP_STOP(ctrlNN)
