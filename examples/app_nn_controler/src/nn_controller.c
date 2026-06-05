@@ -45,8 +45,7 @@
 
 static control_t_n control_n;
 struct vec euler_angles;
-static float state_array[12];
-static int activateNN = 0;
+static float state_array[17];
 static uint32_t activationTime;
 
 int PWM_NN_0, PWM_NN_1, PWM_NN_2, PWM_NN_3;
@@ -62,6 +61,10 @@ void appMain() {
 }
 
 void controllerOutOfTreeInit() {
+  control_n.out_0 = 0.0f;
+  control_n.out_1 = 0.0f;
+  control_n.out_2 = 0.0f;
+  control_n.out_3 = 0.0f;
   control_n.rpm_0 = 0.0f;
   control_n.rpm_1 = 0.0f;
   control_n.rpm_2 = 0.0f;
@@ -85,29 +88,56 @@ void controllerOutOfTree(
     return;
   }
 
-  struct quat q = mkquat(
+  struct quat q_current = mkquat(
       state->attitudeQuaternion.x,
       state->attitudeQuaternion.y,
       state->attitudeQuaternion.z,
       state->attitudeQuaternion.w
   );
 
-  euler_angles = quat2rpy_xyz(q);
+  struct quat q_target = mkquat(
+    setpoint->attitudeQuaternion.x,
+    setpoint->attitudeQuaternion.y,
+    setpoint->attitudeQuaternion.z,
+    setpoint->attitudeQuaternion.w
+  );
 
-  state_array[0] = state->position.x;
-  state_array[1] = state->position.y - 3.74f;
-  state_array[2] = state->position.z - 0.11f;
-  state_array[3] = euler_angles.x;
-  state_array[4] = euler_angles.y;
-  state_array[5] = euler_angles.z;
-  state_array[6] = state->velocity.x;
-  state_array[7] = state->velocity.y;
-  state_array[8] = state->velocity.z;
-  state_array[9] = radians(sensors->gyro.x);
-  state_array[10] = radians(sensors->gyro.y);
-  state_array[11] = radians(sensors->gyro.z);
+  struct quat q_err = quat_error_xyzw(q_target, q_current, true);
 
-  if (activateNN == 0) {
+  struct vec world_pos_error;
+  world_pos_error.x = state->position.x - setpoint->position.x;
+  world_pos_error.y = state->position.y - setpoint->position.y;
+  world_pos_error.z = state->position.z - setpoint->position.z;
+
+  struct vec world_lin_vel;
+  world_lin_vel.x = state->velocity.x;
+  world_lin_vel.y = state->velocity.y;
+  world_lin_vel.z = state->velocity.z;
+
+  struct quat q_current_inv = quat_conjugate(q_current);
+
+  struct vec body_pos_error = rotate_vector_by_quaternion(world_pos_error, q_current_inv);
+  struct vec body_lin_vel = rotate_vector_by_quaternion(world_lin_vel, q_current_inv);
+
+  state_array[0] = body_pos_error.x;
+  state_array[1] = body_pos_error.y;
+  state_array[2] = body_pos_error.z;
+  state_array[3] = q_err.x;
+  state_array[4] = q_err.y;
+  state_array[5] = q_err.z;
+  state_array[6] = q_err.w;
+  state_array[7] = body_lin_vel.x;
+  state_array[8] = body_lin_vel.y;
+  state_array[9] = body_lin_vel.z;
+  state_array[10] = radians(sensors->gyro.x);
+  state_array[11] = radians(sensors->gyro.y);
+  state_array[12] = radians(sensors->gyro.z);
+  state_array[13] = control_n.out_0;
+  state_array[14] = control_n.out_1;
+  state_array[15] = control_n.out_2;
+  state_array[16] = control_n.out_3;
+
+  if (setpoint->mode.z == modeDisable) {
     control->motorPwm[0] = 0;
     control->motorPwm[1] = 0;
     control->motorPwm[2] = 0;
@@ -127,55 +157,74 @@ void controllerOutOfTree(
 }
 
 void rpm2pwm(control_t_n *control_n, int *PWM_NN_0, int *PWM_NN_1, int *PWM_NN_2, int *PWM_NN_3) {
-  const float a = 4070.3f;
-  const float b = 0.2685f;
-
-  *PWM_NN_0 = (control_n->rpm_0 - a) / b;
-  *PWM_NN_1 = (control_n->rpm_1 - a) / b;
-  *PWM_NN_2 = (control_n->rpm_2 - a) / b;
-  *PWM_NN_3 = (control_n->rpm_3 - a) / b;
+  *PWM_NN_0 = (control_n->rpm_0 - 4070.3f) / 0.2685f;
+  *PWM_NN_1 = (control_n->rpm_1 - 4070.3f) / 0.2685f;
+  *PWM_NN_2 = (control_n->rpm_2 - 4070.3f) / 0.2685f;
+  *PWM_NN_3 = (control_n->rpm_3 - 4070.3f) / 0.2685f;
 }
 
 static inline float clampf_pm1(float v) {
   return (v > 1.0f) ? 1.0f : (v < -1.0f) ? -1.0f : v;
 }
 
-struct vec quat2rpy_xyz(struct quat q_xyzw) {
-  float x = q_xyzw.x;
-  float y = q_xyzw.y;
-  float z = q_xyzw.z;
-  float w = q_xyzw.w;
-
-  float s = w*w + x*x + y*y + z*z;
-  if (s > 0.0f) {
-    if (fabsf(1.0f - s) > 1e-6f) {
-      float inv = 1.0f / sqrtf(s);
-      w *= inv;
-      x *= inv;
-      y *= inv;
-      z *= inv;
-    }
-  }
-
-  struct vec e;
-
-  float sinr_cosp = 2.0f * (w*x + y*z);
-  float cosr_cosp = 1.0f - 2.0f * (x*x + y*y);
-  e.x = atan2f(sinr_cosp, cosr_cosp);
-
-  float sinp = 2.0f * (w*y - z*x);
-  e.y = asinf(clampf_pm1(sinp));
-
-  float siny_cosp = 2.0f * (w*z + x*y);
-  float cosy_cosp = 1.0f - 2.0f * (y*y + z*z);
-  e.z = atan2f(siny_cosp, cosy_cosp);
-
-  return e;
+struct quat quat_normalize(struct quat q) {
+  float n = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+  if (n < 1e-12f) return q;
+  return mkquat(q.x/n, q.y/n, q.z/n, q.w/n);
 }
 
-PARAM_GROUP_START(nn_controller)
-PARAM_ADD(PARAM_INT8, activateNN, &activateNN)
-PARAM_GROUP_STOP(nn_controller)
+struct quat quat_conjugate(struct quat q) {
+  return mkquat(-q.x, -q.y, -q.z, q.w);
+}
+
+struct quat quat_multiply(struct quat q1, struct quat q2) {
+  float x = q1.w*q2.x + q1.x*q2.w + q1.y*q2.z - q1.z*q2.y;
+  float y = q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x;
+  float z = q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w;
+  float w = q1.w*q2.w - q1.x*q2.x - q1.y*q2.y - q1.z*q2.z;
+
+  return mkquat(x, y, z, w);
+}
+
+struct quat quat_error_xyzw(struct quat q_target, struct quat q_current, bool ensure_pos_w) {
+  struct quat q_t_norm = quat_normalize(q_target);
+  struct quat q_c_norm = quat_normalize(q_current);
+
+  struct quat q_t_inv = quat_conjugate(q_t_norm);
+  struct quat q_e = quat_multiply(q_t_inv, q_c_norm);
+
+  if (ensure_pos_w && q_e.w < 0.0f) {
+    q_e.x = -q_e.x;
+    q_e.y = -q_e.y;
+    q_e.z = -q_e.z;
+    q_e.w = -q_e.w;
+  }
+
+  return quat_normalize(q_e);
+}
+
+struct vec vec_cross_product(struct vec v1, struct vec v2) {
+  struct vec result;
+  result.x = v1.y * v2.z - v1.z * v2.y;
+  result.y = v1.z * v2.x - v1.x * v2.z;
+  result.z = v1.x * v2.y - v1.y * v2.x;
+  return result;
+}
+
+struct vec rotate_vector_by_quaternion(struct vec v, struct quat q) {
+  struct vec u = {q.x, q.y, q.z};
+  float s = q.w;
+
+  struct vec uv = vec_cross_product(u, v);
+  struct vec uuv = vec_cross_product(u, uv);
+
+  struct vec rotated;
+  rotated.x = v.x + 2.0f * (s * uv.x + uuv.x);
+  rotated.y = v.y + 2.0f * (s * uv.y + uuv.y);
+  rotated.z = v.z + 2.0f * (s * uv.z + uuv.z);
+
+  return rotated;
+}
 
 LOG_GROUP_START(ctrlNN)
 LOG_ADD(LOG_UINT32, activationTime, &activationTime)
@@ -183,9 +232,6 @@ LOG_ADD(LOG_UINT32, activationTime, &activationTime)
 LOG_ADD(LOG_FLOAT, ob_x, &state_array[0])
 LOG_ADD(LOG_FLOAT, ob_y, &state_array[1])
 LOG_ADD(LOG_FLOAT, ob_z, &state_array[2])
-LOG_ADD(LOG_FLOAT, ob_roll, &state_array[3])
-LOG_ADD(LOG_FLOAT, ob_pitch, &state_array[4])
-LOG_ADD(LOG_FLOAT, ob_yaw, &state_array[5])
 
 LOG_ADD(LOG_INT32, motor_pwm_0, &PWM_NN_0)
 LOG_ADD(LOG_INT32, motor_pwm_1, &PWM_NN_1)

@@ -8,6 +8,10 @@
 #include <math.h>
 
 typedef struct control_t_n {
+  float out_0;
+  float out_1;
+  float out_2;
+  float out_3;
   float rpm_0;
   float rpm_1;
   float rpm_2;
