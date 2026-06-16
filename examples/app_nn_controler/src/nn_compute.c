@@ -3,7 +3,7 @@
 
 #define g 9.82f
 #define mass 0.033f
-#define kf 3.85e-10f
+#define kf 4.85e-10f
 
 typedef enum { ACT_LINEAR = 0, ACT_TANH = 1 } nn_activation_t;
 static const float kHoverRPM = sqrtf((g * mass) / (4.0f * kf));
