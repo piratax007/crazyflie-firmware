@@ -4,9 +4,7 @@
 #define g 9.82f
 #define mass 0.033f
 #define kf 4.85e-10f
-
-typedef enum { ACT_LINEAR = 0, ACT_TANH = 1 } nn_activation_t;
-static const float kHoverRPM = sqrtf((g * mass) / (4.0f * kf));
+static const float hoverRPM = sqrtf((g * mass) / (4.0f * kf));
 
 static const int structure[3][2] = {{64, 17},{64, 64},{4, 64}};
 static float output_0[64];
@@ -19,53 +17,32 @@ static const float mlp_extractor_policy_net_0_bias[64] = {0.05506082996726036,0.
 static const float mlp_extractor_policy_net_2_bias[64] = {0.03494896739721298,-0.11554708331823349,-0.01804194785654545,0.08466298878192902,0.13555189967155457,0.034651391208171844,-0.07703956961631775,0.03565344586968422,0.27427658438682556,0.02264321967959404,-0.001330736093223095,0.1531558483839035,-0.016220904886722565,-0.1826545149087906,-0.13990159332752228,0.026153355836868286,0.053949352353811264,-0.3085314631462097,-0.036947403103113174,-0.02002071589231491,-0.018787244334816933,-0.013639404438436031,-0.05489157885313034,0.07862904667854309,-0.037139806896448135,0.257541298866272,-0.2817062437534332,-0.08872363716363907,0.014283754862844944,0.10902544111013412,0.32270491123199463,0.06864287704229355,-0.007859512232244015,0.18549327552318573,0.06653726100921631,0.09251324832439423,0.08200789242982864,0.09706836193799973,-0.10435489565134048,-0.00645805336534977,0.007828972302377224,0.07393285632133484,-0.0036639710888266563,-0.09120051562786102,-0.08099183440208435,-0.030218450352549553,-0.15558461844921112,0.10359860211610794,0.05574093759059906,0.27133709192276,-0.06426689028739929,-0.022205732762813568,-0.10512718558311462,-0.0235033817589283,0.12094999849796295,-0.055480800569057465,0.01972154714167118,0.0293533094227314,-0.04751737415790558,0.00696896156296134,-0.18049798905849457,-0.34609195590019226,-0.030408045276999474,0.05578996613621712};
 static const float action_net_bias[4] = {-0.07251142710447311,-0.09946287423372269,-0.08354637026786804,-0.07783415913581848};
 
-static inline void dense_fma(
-    const float * __restrict x,
-    const float * __restrict W,
-    const float * __restrict b,
-    float * __restrict y,
-    const int out_dim,
-    const int in_dim,
-    const nn_activation_t act
-) {
-    for (int i = 0; i < out_dim; i++) {
-        const float * __restrict Wi = &W[(size_t)i * (size_t)in_dim];
-        float acc = b[i];
-
-    #pragma GCC unroll 16
-
-        for (int j = 0; j < in_dim; j++) {
-            acc = fmaf(x[j], Wi[j], acc);
-        }
-
-        y[i] = (act == ACT_TANH) ? tanhf(acc) : acc;
-    }
-}
-
 void neuralNetworkComputation(struct control_t_n *control_n, const float *state_array) {
-    dense_fma(
-        state_array,
-        &mlp_extractor_policy_net_0_weight[0][0],
-        &mlp_extractor_policy_net_0_bias[0],
-        &output_0[0],
-        structure[0][0], structure[0][1], ACT_TANH
-    );
-
-    dense_fma(
-        &output_0[0],
-        &mlp_extractor_policy_net_2_weight[0][0],
-        &mlp_extractor_policy_net_2_bias[0],
-        &output_1[0],
-        structure[1][0], structure[1][1], ACT_TANH
-    );
-
-    dense_fma(
-        &output_1[0],
-        &action_net_weight[0][0],
-        &action_net_bias[0],
-        &output_2[0],
-        structure[2][0], structure[2][1], ACT_LINEAR
-    );
+    for (int i = 0; i < structure[0][0]; i++) {
+        output_0[i] = 0;
+        for (int j = 0; j < structure[0][1]; j++) {
+            output_0[i] += state_array[j] * mlp_extractor_policy_net_0_weight[i][j];
+        }
+        output_0[i] += mlp_extractor_policy_net_0_bias[i];
+        output_0[i] = tanhf(output_0[i]);
+    }
+    
+    for (int i = 0; i < structure[1][0]; i++) {
+        output_1[i] = 0;
+        for (int j = 0; j < structure[1][1]; j++) {
+            output_1[i] += output_0[j] * mlp_extractor_policy_net_2_weight[i][j];
+        }
+        output_1[i] += mlp_extractor_policy_net_2_bias[i];
+        output_1[i] = tanhf(output_1[i]);
+    }
+    
+    for (int i = 0; i < structure[2][0]; i++) {
+        output_2[i] = 0;
+        for (int j = 0; j < structure[2][1]; j++) {
+            output_2[i] += output_1[j] * action_net_weight[i][j];
+        }
+        output_2[i] += action_net_bias[i];
+    }
     
     for (int i = 0; i < 4; i++) {
         output_2[i] = output_2[i] < -1.0f ? -1.0f : (output_2[i] > 1.0f ? 1.0f : output_2[i]);
@@ -75,9 +52,8 @@ void neuralNetworkComputation(struct control_t_n *control_n, const float *state_
     control_n->out_1 = output_2[1];
     control_n->out_2 = output_2[2];
     control_n->out_3 = output_2[3];
-    control_n->rpm_0 = kHoverRPM * (1.0f + 0.5f * output_2[0]);
-    control_n->rpm_1 = kHoverRPM * (1.0f + 0.5f * output_2[1]);
-    control_n->rpm_2 = kHoverRPM * (1.0f + 0.5f * output_2[2]);
-    control_n->rpm_3 = kHoverRPM * (1.0f + 0.5f * output_2[3]);
+    control_n->rpm_0 = hoverRPM * (1.0f + 0.5f * output_2[0]);
+    control_n->rpm_1 = hoverRPM * (1.0f + 0.5f * output_2[1]);
+    control_n->rpm_2 = hoverRPM * (1.0f + 0.5f * output_2[2]);
+    control_n->rpm_3 = hoverRPM * (1.0f + 0.5f * output_2[3]);
 }
-
