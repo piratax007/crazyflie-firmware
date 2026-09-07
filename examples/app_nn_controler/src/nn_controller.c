@@ -85,7 +85,7 @@ void controllerOutOfTree(
     ) {
   
   control->controlMode = controlModeNN;
-  if (!RATE_DO_EXECUTE(RATE_200_HZ, tick)) {
+  if (!RATE_DO_EXECUTE(RATE_500_HZ, tick)) {
     return;
   }
 
@@ -97,10 +97,10 @@ void controllerOutOfTree(
   );
 
   struct quat q_target = mkquat(
-    setpoint->attitudeQuaternion.x,
-    setpoint->attitudeQuaternion.y,
-    setpoint->attitudeQuaternion.z,
-    setpoint->attitudeQuaternion.w
+    0.0f,
+    0.0f,
+    0.0f,
+    1.0f
   );
 
   struct quat q_err = quat_error_xyzw(q_target, q_current, true);
@@ -115,24 +115,24 @@ void controllerOutOfTree(
   world_lin_vel.y = state->velocity.y;
   world_lin_vel.z = state->velocity.z;
 
-  struct quat q_current_inv = quat_conjugate(q_current);
+  // struct quat q_current_inv = quat_conjugate(q_current);
   // rotation_matrix = quat2rotmat(q_current);
 
-  struct vec body_pos_error = rotate_vector_by_quaternion(world_pos_error, q_current_inv);
-  struct vec body_lin_vel = rotate_vector_by_quaternion(world_lin_vel, q_current_inv);
+  //struct vec body_pos_error = rotate_vector_by_quaternion(world_pos_error, q_current_inv);
+  //struct vec body_lin_vel = rotate_vector_by_quaternion(world_lin_vel, q_current_inv);
   // struct vec body_pos_error = mvmul(mtranspose(rotation_matrix), mkvec(world_pos_error.x, world_pos_error.y, world_pos_error.z));
   // struct vec body_lin_vel = mvmul(mtranspose(rotation_matrix), mkvec(world_lin_vel.x, world_lin_vel.y, world_lin_vel.z));
 
-  state_array[0] = body_pos_error.x;
-  state_array[1] = body_pos_error.y;
-  state_array[2] = body_pos_error.z;
+  state_array[0] = world_pos_error.x;
+  state_array[1] = world_pos_error.y;
+  state_array[2] = world_pos_error.z;
   state_array[3] = q_err.x;
   state_array[4] = q_err.y;
   state_array[5] = q_err.z;
   state_array[6] = q_err.w;
-  state_array[7] = body_lin_vel.x;
-  state_array[8] = body_lin_vel.y;
-  state_array[9] = body_lin_vel.z;
+  state_array[7] = world_lin_vel.x;
+  state_array[8] = world_lin_vel.y;
+  state_array[9] = world_lin_vel.z;
   state_array[10] = radians(sensors->gyro.x);
   state_array[11] = radians(sensors->gyro.y);
   state_array[12] = radians(sensors->gyro.z);
