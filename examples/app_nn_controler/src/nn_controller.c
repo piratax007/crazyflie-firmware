@@ -44,7 +44,6 @@
 #include "led.h"
 
 static control_t_n control_n;
-// static struct mat33 rotation_matrix;
 struct vec euler_angles;
 static float state_array[17];
 static uint32_t activationTime;
@@ -114,14 +113,6 @@ void controllerOutOfTree(
   world_lin_vel.x = state->velocity.x;
   world_lin_vel.y = state->velocity.y;
   world_lin_vel.z = state->velocity.z;
-
-  // struct quat q_current_inv = quat_conjugate(q_current);
-  // rotation_matrix = quat2rotmat(q_current);
-
-  //struct vec body_pos_error = rotate_vector_by_quaternion(world_pos_error, q_current_inv);
-  //struct vec body_lin_vel = rotate_vector_by_quaternion(world_lin_vel, q_current_inv);
-  // struct vec body_pos_error = mvmul(mtranspose(rotation_matrix), mkvec(world_pos_error.x, world_pos_error.y, world_pos_error.z));
-  // struct vec body_lin_vel = mvmul(mtranspose(rotation_matrix), mkvec(world_lin_vel.x, world_lin_vel.y, world_lin_vel.z));
 
   state_array[0] = world_pos_error.x;
   state_array[1] = world_pos_error.y;
