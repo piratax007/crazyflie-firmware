@@ -60,7 +60,7 @@ void appMain() {
   }
 }
 
-void controllerOutOfTreeInit() {
+static void resetNNState(void) {
   control_n.out_0 = 0.0f;
   control_n.out_1 = 0.0f;
   control_n.out_2 = 0.0f;
@@ -69,6 +69,10 @@ void controllerOutOfTreeInit() {
   control_n.rpm_1 = 0.0f;
   control_n.rpm_2 = 0.0f;
   control_n.rpm_3 = 0.0f;
+}
+
+void controllerOutOfTreeInit() {
+  resetNNState();
 }
 
 bool controllerOutOfTreeTest() {
@@ -133,10 +137,16 @@ void controllerOutOfTree(
   state_array[16] = control_n.out_3;
 
   if (setpoint->mode.z == modeDisable) {
+    resetNNState();
     control->motorPwm[0] = 0;
     control->motorPwm[1] = 0;
     control->motorPwm[2] = 0;
     control->motorPwm[3] = 0;
+    PWM_NN_0 = 0;
+    PWM_NN_1 = 0;
+    PWM_NN_2 = 0;
+    PWM_NN_3 = 0;
+    return;
   } else {
     uint64_t startTime = usecTimestamp();
     neuralNetworkComputation(&control_n, state_array);
