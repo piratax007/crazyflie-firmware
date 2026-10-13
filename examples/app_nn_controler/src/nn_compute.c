@@ -2,7 +2,7 @@
 #include "nn_compute.h"
 
 #define g 9.82f
-#define mass 0.033f
+#define mass 0.044f
 #define kf 4.85e-10f
 static const float hoverRPM = sqrtf((g * mass) / (4.0f * kf));
 
